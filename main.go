@@ -1,11 +1,13 @@
 package main
 
-import "net/http"
-import "log"
+import ("net/http"
+ 		"log"
+ 		"github.com/xubiosueldos/conexionBD"
+)
 
 func main() {
 
-	db := connectBD()
+	db := conexionBD.connectBD()
 	db.CreateTable(&Legajo{})
 
 	router := newRouter()
