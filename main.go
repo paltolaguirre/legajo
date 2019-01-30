@@ -7,7 +7,7 @@ import ("net/http"
 
 func main() {
 
-	db := conexionBD.connectBD()
+	db := conexionBD.ConnectBD()
 	db.CreateTable(&Legajo{})
 
 	router := newRouter()

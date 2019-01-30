@@ -8,7 +8,7 @@ import (
     "encoding/json"
   	"github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/postgres"
-
+    "github.com/xubiosueldos/conexionBD"
 )
 
 var db *gorm.DB
@@ -66,7 +66,7 @@ func Index(w http.ResponseWriter, r *http.Request){
 
 func LegajoList(w http.ResponseWriter, r *http.Request){
 
-	db := connectBD()
+	db := conexionBD.ConnectBD()
 
 	var legajos []Legajo
 
@@ -92,9 +92,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request){
 
 	//db.First(&legajo, "id = ?", legajo_id)
 
-	asd := connectBD()
-	asd.First(&legajo, "id = ?", legajo_id)
-	asd.Close()
+	asd2 := conexionBD.ConnectBD()
+	asd2.First(&legajo, "id = ?", legajo_id)
+	asd2.Close()
 
 	responseLegajo(w, 202, legajo)
 
