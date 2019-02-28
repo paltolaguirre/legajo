@@ -28,12 +28,6 @@ func newRouter() *mux.Router {
 
 var routes = Routes{
 	Route{
-		"Index",
-		"GET",
-		"/",
-		Index,
-	},
-	Route{
 		"LegajoList",
 		"GET",
 		"/legajos",

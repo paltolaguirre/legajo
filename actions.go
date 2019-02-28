@@ -9,36 +9,17 @@ import (
   	"github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/postgres"
     "github.com/xubiosueldos/conexionBD"
+    "github.com/xubiosueldos/autenticacion/publico"
+    "io/ioutil"
+    "github.com/xubiosueldos/legajo/structLegajo"
 )
+
+
 
 var db *gorm.DB
 var err error
 
-type Legajo struct {
-	gorm.Model
-	Nombre string
-	Codigo string
-	Descripcion string
-	Activo int
-}
-
-type Legajos []Legajo
-
-
-/*func connectBD()(*gorm.DB){
-
-	db, err = gorm.Open("postgres", "host=192.168.30.111 port=5432 user=postgres dbname=DES_MULTITENANT_AR_1 password=Post66MM/")
-
-	if err != nil {
-		panic("failed to connect database")
-	}
-	//defer db.Close()
-	return db
-
-}*/
-
-
-func responseLegajo(w http.ResponseWriter, status int, results Legajo){
+func responseLegajo(w http.ResponseWriter, status int, results structLegajo.Legajo){
 
 	w.Header().Set("Content-Type", "application-json")
 	w.WriteHeader(status)
@@ -47,7 +28,7 @@ func responseLegajo(w http.ResponseWriter, status int, results Legajo){
 }
 
 
-func responseLegajos(w http.ResponseWriter, status int, results []Legajo){
+func responseLegajos(w http.ResponseWriter, status int, results []structLegajo.Legajo){
 
 	w.Header().Set("Content-Type", "application-json")
 	w.WriteHeader(status)
@@ -55,29 +36,26 @@ func responseLegajos(w http.ResponseWriter, status int, results []Legajo){
 	json.NewEncoder(w).Encode(results)
 
 }
-
-
-func Index(w http.ResponseWriter, r *http.Request){
-  
-	fmt.Fprintf(w, "Probando API Rest con Gorm")
-
-}
-
 
 func LegajoList(w http.ResponseWriter, r *http.Request){
 
-	db := conexionBD.ConnectBD()
+	tokenAutenticacion, tokenError := checkTokenValido(r)
+	token := *tokenAutenticacion
+	if(tokenError == nil){
+		
+		tenant := token.Tenant
+		fmt.Println(tenant)
+		db := conexionBD.ConnectBD(tenant)
 
-	var legajos []Legajo
+		var legajos []structLegajo.Legajo
 
-	//Lista todos los legajos 
-	fmt.Println("Los legajos de la BD son: ")
-	
+		//Lista todos los legajos 
+		fmt.Println("Los legajos de la BD son: ")
+		db.Find(&legajos)
 
-	db.Find(&legajos)
-
-	fmt.Println(legajos)
-	responseLegajos(w, 202, legajos)
+		fmt.Println(legajos)
+		responseLegajos(w, 202, legajos)
+	}
 
 }
 
@@ -85,10 +63,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request){
 
 	params := mux.Vars(r)
 	legajo_id := params["id"]
-
 	fmt.Println(legajo_id)
 
-	var legajo Legajo	//Con &var --> lo que devuelve el metodo se le asigna a la var
+	var legajo structLegajo.Legajo	//Con &var --> lo que devuelve el metodo se le asigna a la var
 
 	//db.First(&legajo, "id = ?", legajo_id)
 
@@ -136,7 +113,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request){
 
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo_data Legajo
+	var legajo_data structLegajo.Legajo
 	err := decoder.Decode(&legajo_data)
 
 	if( err != nil ){
@@ -163,7 +140,7 @@ func LegajoPatch(w http.ResponseWriter, r *http.Request){
 
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo_data Legajo
+	var legajo_data structLegajo.Legajo
 	err := decoder.Decode(&legajo_data)
 
 	if( err != nil ){
@@ -176,7 +153,7 @@ func LegajoPatch(w http.ResponseWriter, r *http.Request){
 	defer r.Body.Close()
 
 	//Modifica el legajo que cumpla con la condición
-	db.Model(Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
+	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
 
 	responseLegajo(w, 202, legajo_data)
 
@@ -210,7 +187,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request){
     //--Borrado Fisico
 	fmt.Println(legajo_id)
 
-    db.Unscoped().Where("id = ?", legajo_id).Delete(Legajo{})
+    db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{})
 
     //--Borrado Logico
     //db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
@@ -229,3 +206,36 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(results)
 }
 
+func checkTokenValido(r *http.Request)(*publico.TokenAutenticacion, *publico.Error){
+
+	var tokenAutenticacion *publico.TokenAutenticacion
+	var tokenError *publico.Error
+
+	url := "http://localhost:8081/check-token"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	token := r.Header.Get("Token")
+
+	req.Header.Add("token", token)
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	if(res.StatusCode != 400){
+
+		// tokenAutenticacion = &(TokenAutenticacion{})
+		tokenAutenticacion = new(publico.TokenAutenticacion)
+    	json.Unmarshal([]byte(string(body)), tokenAutenticacion)
+		
+	}else
+	{
+		tokenError = new(publico.Error)
+		json.Unmarshal([]byte(string(body)), tokenError)
+	
+	}
+	
+	return tokenAutenticacion, tokenError
+}
