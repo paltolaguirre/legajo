@@ -1,4 +1,4 @@
-package publico
+package structLegajo
 
 
 type Legajo struct {
