@@ -5,8 +5,8 @@ import (
     "net/http"
     "log"
     "github.com/gorilla/mux"
+     "github.com/jinzhu/gorm"
     "encoding/json"
-  	"github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/postgres"
     "github.com/xubiosueldos/conexionBD"
     "github.com/xubiosueldos/autenticacion/publico"
@@ -37,12 +37,29 @@ func responseLegajos(w http.ResponseWriter, status int, results []structLegajo.L
 
 }
 
+func responseError(w http.ResponseWriter, status int, results publico.Error){
+
+	w.Header().Set("Content-Type", "application-json")
+	w.WriteHeader(status)
+
+	json.NewEncoder(w).Encode(results)
+}
+
 func LegajoList(w http.ResponseWriter, r *http.Request){
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
-	token := *tokenAutenticacion
-	if(tokenError == nil){
+	
+	if(tokenError != nil){
+
+		errorToken := *tokenError
+
+		responseError(w, errorToken.ErrorCodigo, errorToken)
+
 		
+		
+	}else
+	{	
+		token := *tokenAutenticacion
 		tenant := token.Tenant
 		fmt.Println(tenant)
 		db := conexionBD.ConnectBD(tenant)
@@ -61,19 +78,31 @@ func LegajoList(w http.ResponseWriter, r *http.Request){
 
 func LegajoShow(w http.ResponseWriter, r *http.Request){
 
-	params := mux.Vars(r)
-	legajo_id := params["id"]
-	fmt.Println(legajo_id)
+	tokenAutenticacion, tokenError := checkTokenValido(r)
+	if(tokenError != nil){
 
-	var legajo structLegajo.Legajo	//Con &var --> lo que devuelve el metodo se le asigna a la var
+		errorToken := *tokenError
+		responseError(w, errorToken.ErrorCodigo, errorToken)
 
-	//db.First(&legajo, "id = ?", legajo_id)
+	}else{
 
-	asd2 := conexionBD.ConnectBD()
-	asd2.First(&legajo, "id = ?", legajo_id)
-	asd2.Close()
+		params := mux.Vars(r) //TODO: es global..? quizas usar el r
+		legajo_id := params["id"]
+		fmt.Println(legajo_id)
 
-	responseLegajo(w, 202, legajo)
+		var legajo structLegajo.Legajo	//Con &var --> lo que devuelve el metodo se le asigna a la var
+
+		//db.First(&legajo, "id = ?", legajo_id)
+		token := *tokenAutenticacion
+		tenant := token.Tenant
+		db := conexionBD.ConnectBD(tenant)
+		db.First(&legajo, "id = ?", legajo_id)
+		db.Close()
+
+		responseLegajo(w, 202, legajo)
+	}
+
+
 
 }
 
@@ -82,7 +111,7 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request){
   
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo_data Legajo
+	var legajo_data structLegajo.Legajo
 	//&nombre_var para decirle que es la var que no tiene datos y va a tener que rellenar
 	err := decoder.Decode(&legajo_data)
 
@@ -126,7 +155,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request){
 	defer r.Body.Close()
 
 	//Modifica el legajo que cumpla con la condición
-	db.Model(Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
+	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
 
 	responseLegajo(w, 202, legajo_data)
 

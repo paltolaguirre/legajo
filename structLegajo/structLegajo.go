@@ -1,5 +1,6 @@
 package structLegajo
 
+import "github.com/jinzhu/gorm"
 
 type Legajo struct {
 	gorm.Model

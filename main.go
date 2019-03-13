@@ -3,12 +3,13 @@ package main
 import ("net/http"
  		"log"
  		"github.com/xubiosueldos/conexionBD"
+ 		"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 func main() {
-
-	db := conexionBD.ConnectBD()
-	db.CreateTable(&Legajo{})
+	tenant := "algo"
+	db := conexionBD.ConnectBD(tenant)
+	db.CreateTable(&structLegajo.Legajo{})
 
 	router := newRouter()
 	
