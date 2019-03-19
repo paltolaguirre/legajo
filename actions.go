@@ -19,30 +19,23 @@ import (
 var db *gorm.DB
 var err error
 
-func responseLegajo(w http.ResponseWriter, status int, results structLegajo.Legajo){
 
-	w.Header().Set("Content-Type", "application-json")
+func respondJSON(w http.ResponseWriter, status int, results interface{}){
+
+	response, err := json.Marshal(results)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-
-	json.NewEncoder(w).Encode(results)
-}
-
-
-func responseLegajos(w http.ResponseWriter, status int, results []structLegajo.Legajo){
-
-	w.Header().Set("Content-Type", "application-json")
-	w.WriteHeader(status)
-
-	json.NewEncoder(w).Encode(results)
+	w.Write([]byte(response))
 
 }
 
-func responseError(w http.ResponseWriter, status int, results publico.Error){
-
-	w.Header().Set("Content-Type", "application-json")
-	w.WriteHeader(status)
-
-	json.NewEncoder(w).Encode(results)
+func respondError(w http.ResponseWriter, code int, message string) {
+	respondJSON(w, code, map[string]string{"error": message})
 }
 
 func LegajoList(w http.ResponseWriter, r *http.Request){
@@ -53,7 +46,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request){
 
 		errorToken := *tokenError
 
-		responseError(w, errorToken.ErrorCodigo, errorToken)
+		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
 
 		
 		
@@ -71,7 +64,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request){
 		db.Find(&legajos)
 
 		fmt.Println(legajos)
-		responseLegajos(w, 202, legajos)
+		respondJSON(w, 202, legajos)
 	}
 
 }
@@ -80,9 +73,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request){
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
 	if(tokenError != nil){
-
 		errorToken := *tokenError
-		responseError(w, errorToken.ErrorCodigo, errorToken)
+		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
+		fmt.Println(errorToken)
 
 	}else{
 
@@ -99,7 +92,7 @@ func LegajoShow(w http.ResponseWriter, r *http.Request){
 		db.First(&legajo, "id = ?", legajo_id)
 		db.Close()
 
-		responseLegajo(w, 202, legajo)
+		respondJSON(w, 202, legajo)
 	}
 
 
@@ -129,7 +122,7 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request){
 		fmt.Println(err)
 	}
 
-	responseLegajo(w, 202, legajo_data)
+	respondJSON(w, 202, legajo_data)
 
 }
 
@@ -157,7 +150,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request){
 	//Modifica el legajo que cumpla con la condición
 	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
 
-	responseLegajo(w, 202, legajo_data)
+	respondJSON(w, 202, legajo_data)
 
 }
 
@@ -184,7 +177,7 @@ func LegajoPatch(w http.ResponseWriter, r *http.Request){
 	//Modifica el legajo que cumpla con la condición
 	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
 
-	responseLegajo(w, 202, legajo_data)
+	respondJSON(w, 202, legajo_data)
 
 }
 
@@ -229,10 +222,8 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request){
 
 	results := message
 
-	w.Header().Set("Content-Type", "application-json")
-	w.WriteHeader(200)
+	respondJSON(w, 200, results)
 
-	json.NewEncoder(w).Encode(results)
 }
 
 func checkTokenValido(r *http.Request)(*publico.TokenAutenticacion, *publico.Error){
