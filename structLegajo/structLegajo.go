@@ -1,11 +1,8 @@
 package structLegajo
 
-import "github.com/jinzhu/gorm"
-
 type Legajo struct {
-	gorm.Model
-	Nombre string
-	Codigo string
+	Nombre      string
+	Codigo      string
 	Descripcion string
-	Activo int
+	Activo      int
 }
