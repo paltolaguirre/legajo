@@ -20,4 +20,8 @@ github.com/xubiosueldos/conexionBD v0.0.0-20190130161333-c1882e4e8a28 h1:CIFUq/T
 github.com/xubiosueldos/conexionBD v0.0.0-20190130161333-c1882e4e8a28/go.mod h1:w+NLrmGfHNCU1qTKiJB519uGgyZmasmSqDoCmEoXV28=
 github.com/xubiosueldos/conexionBD v0.0.0-20190228134808-5dbf90c344f0 h1:4ggpcrn+iSvvpBJIri/wzqy0AdMKoRgdOiJdaHJRGhs=
 github.com/xubiosueldos/conexionBD v0.0.0-20190228134808-5dbf90c344f0/go.mod h1:w+NLrmGfHNCU1qTKiJB519uGgyZmasmSqDoCmEoXV28=
+github.com/xubiosueldos/conexionBD v0.0.0-20190325151302-f9d08f8b8075 h1:oNatudXg0wKev4cTaUyYSDtFKgjRgWa0Xxi8slq1T0w=
+github.com/xubiosueldos/conexionBD v0.0.0-20190325151302-f9d08f8b8075/go.mod h1:w+NLrmGfHNCU1qTKiJB519uGgyZmasmSqDoCmEoXV28=
+github.com/xubiosueldos/conexionBD v0.0.0-20190325151509-c8dd5d0176e7 h1:HHSOJo0Z5wLjWw/FyR6VOm6PGYZPNaPE3w72S9ozgwY=
+github.com/xubiosueldos/conexionBD v0.0.0-20190325151509-c8dd5d0176e7/go.mod h1:w+NLrmGfHNCU1qTKiJB519uGgyZmasmSqDoCmEoXV28=
 github.com/xubiosueldos/legajo v1.0.0 h1:GCrlYMgDceGIaofSBvph4JYSxF84Mc2Rj/KIHLDAZUk=

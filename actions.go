@@ -1,26 +1,24 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-    "net/http"
-    "log"
-    "github.com/gorilla/mux"
-     "github.com/jinzhu/gorm"
-    "encoding/json"
-  _ "github.com/jinzhu/gorm/dialects/postgres"
-    "github.com/xubiosueldos/conexionBD"
-    "github.com/xubiosueldos/autenticacion/publico"
-    "io/ioutil"
-    "github.com/xubiosueldos/legajo/structLegajo"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/xubiosueldos/autenticacion/publico"
+	"github.com/xubiosueldos/conexionBD"
+	"github.com/xubiosueldos/legajo/structLegajo"
 )
-
-
 
 var db *gorm.DB
 var err error
 
-
-func respondJSON(w http.ResponseWriter, status int, results interface{}){
+func respondJSON(w http.ResponseWriter, status int, results interface{}) {
 
 	response, err := json.Marshal(results)
 	if err != nil {
@@ -38,20 +36,17 @@ func respondError(w http.ResponseWriter, code int, message string) {
 	respondJSON(w, code, map[string]string{"error": message})
 }
 
-func LegajoList(w http.ResponseWriter, r *http.Request){
+func LegajoList(w http.ResponseWriter, r *http.Request) {
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
-	
-	if(tokenError != nil){
+
+	if tokenError != nil {
 
 		errorToken := *tokenError
 
 		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
 
-		
-		
-	}else
-	{	
+	} else {
 		token := *tokenAutenticacion
 		tenant := token.Tenant
 		fmt.Println(tenant)
@@ -59,7 +54,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request){
 
 		var legajos []structLegajo.Legajo
 
-		//Lista todos los legajos 
+		//Lista todos los legajos
 		fmt.Println("Los legajos de la BD son: ")
 		db.Find(&legajos)
 
@@ -69,48 +64,46 @@ func LegajoList(w http.ResponseWriter, r *http.Request){
 
 }
 
-func LegajoShow(w http.ResponseWriter, r *http.Request){
+func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
-	if(tokenError != nil){
+	if tokenError != nil {
 		errorToken := *tokenError
 		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
 		fmt.Println(errorToken)
 
-	}else{
+	} else {
 
 		params := mux.Vars(r) //TODO: es global..? quizas usar el r
 		legajo_id := params["id"]
 		fmt.Println(legajo_id)
 
-		var legajo structLegajo.Legajo	//Con &var --> lo que devuelve el metodo se le asigna a la var
+		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		//db.First(&legajo, "id = ?", legajo_id)
 		token := *tokenAutenticacion
 		tenant := token.Tenant
 		db := conexionBD.ConnectBD(tenant)
-		db.First(&legajo, "id = ?", legajo_id)
+		db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id)
 		db.Close()
 
 		respondJSON(w, 202, legajo)
 	}
 
-
-
 }
 
+func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
-func LegajoAdd(w http.ResponseWriter, r *http.Request){
-  
 	decoder := json.NewDecoder(r.Body)
 
 	var legajo_data structLegajo.Legajo
 	//&nombre_var para decirle que es la var que no tiene datos y va a tener que rellenar
 	err := decoder.Decode(&legajo_data)
 
-	if(err != nil){
+	if err != nil {
 		panic(err)
 	}
+	db := conexionBD.ConnectBD("tenant")
 
 	//Para cerrar la lectura de algo
 	defer r.Body.Close()
@@ -126,19 +119,45 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request){
 
 }
 
+func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
-func LegajoUpdate(w http.ResponseWriter, r *http.Request){
- 
 	params := mux.Vars(r)
 	legajo_id := params["id"]
-
 
 	decoder := json.NewDecoder(r.Body)
 
 	var legajo_data structLegajo.Legajo
 	err := decoder.Decode(&legajo_data)
 
-	if( err != nil ){
+	if err != nil {
+		panic(err)
+		w.WriteHeader(500)
+		return
+	}
+	fmt.Println(legajo_data)
+	db := conexionBD.ConnectBD("tenant")
+
+	//cortar la lectura del body
+	defer r.Body.Close()
+
+	//Modifica el legajo que cumpla con la condición
+	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
+
+	respondJSON(w, 202, legajo_data)
+
+}
+
+func LegajoPatch(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	legajo_id := params["id"]
+
+	decoder := json.NewDecoder(r.Body)
+
+	var legajo_data structLegajo.Legajo
+	err := decoder.Decode(&legajo_data)
+
+	if err != nil {
 		panic(err)
 		w.WriteHeader(500)
 		return
@@ -153,72 +172,45 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request){
 	respondJSON(w, 202, legajo_data)
 
 }
-
-func LegajoPatch(w http.ResponseWriter, r *http.Request){
- 
-	params := mux.Vars(r)
-	legajo_id := params["id"]
-
-
-	decoder := json.NewDecoder(r.Body)
-
-	var legajo_data structLegajo.Legajo
-	err := decoder.Decode(&legajo_data)
-
-	if( err != nil ){
-		panic(err)
-		w.WriteHeader(500)
-		return
-	}
-	fmt.Println(legajo_data)
-	//cortar la lectura del body
-	defer r.Body.Close()
-
-	//Modifica el legajo que cumpla con la condición
-	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
-
-	respondJSON(w, 202, legajo_data)
-
-}
-
 
 type Message struct {
-	Status string `json: "status"`
+	Status  string `json: "status"`
 	Message string `json: "message"`
 }
- //Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
- //Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
-func (this *Message) setStatus(data string){
+
+//Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
+//Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
+func (this *Message) setStatus(data string) {
 	this.Status = data
 }
 
- //Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
- //Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
-func (this *Message) setMessage(data string){
+//Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
+//Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
+func (this *Message) setMessage(data string) {
 	this.Message = data
 }
 
+func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 
-func LegajoRemove(w http.ResponseWriter, r *http.Request){
-
-  	//Para obtener los parametros por la url
+	//Para obtener los parametros por la url
 	params := mux.Vars(r)
 	legajo_id := params["id"]
 
-    //Eliminar legajo según condición
-    //--Borrado Fisico
+	//Eliminar legajo según condición
+	//--Borrado Fisico
 	fmt.Println(legajo_id)
+	db := conexionBD.ConnectBD("tenant")
 
-    db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{})
+	db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{})
 
-    //--Borrado Logico
-    //db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
+	//--Borrado Logico
+	//db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
 
-    //db.Delete(Legajo{}, "descripcion = ?", "Probando Update")
+	//db.Delete(Legajo{}, "descripcion = ?", "Probando Update")
 
-    message := new(Message)
+	message := new(Message)
 	message.setStatus("success")
-	message.setMessage("El legajo con ID " +legajo_id+ " ha sido eliminado correctamente")
+	message.setMessage("El legajo con ID " + legajo_id + " ha sido eliminado correctamente")
 
 	results := message
 
@@ -226,7 +218,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request){
 
 }
 
-func checkTokenValido(r *http.Request)(*publico.TokenAutenticacion, *publico.Error){
+func checkTokenValido(r *http.Request) (*publico.TokenAutenticacion, *publico.Error) {
 
 	var tokenAutenticacion *publico.TokenAutenticacion
 	var tokenError *publico.Error
@@ -244,18 +236,56 @@ func checkTokenValido(r *http.Request)(*publico.TokenAutenticacion, *publico.Err
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	if(res.StatusCode != 400){
+	if res.StatusCode != 400 {
 
 		// tokenAutenticacion = &(TokenAutenticacion{})
 		tokenAutenticacion = new(publico.TokenAutenticacion)
-    	json.Unmarshal([]byte(string(body)), tokenAutenticacion)
-		
-	}else
-	{
+		json.Unmarshal([]byte(string(body)), tokenAutenticacion)
+
+	} else {
 		tokenError = new(publico.Error)
 		json.Unmarshal([]byte(string(body)), tokenError)
-	
+
 	}
-	
+
 	return tokenAutenticacion, tokenError
+}
+
+func ProvinciaShow(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r) //TODO: es global..? quizas usar el r
+	legajo_id := params["id"]
+	fmt.Println(legajo_id)
+
+	var provincia structLegajo.Provincia //Con &var --> lo que devuelve el metodo se le asigna a la var
+
+	//db.First(&legajo, "id = ?", legajo_id)
+
+	db := conexionBD.ConnectBD("")
+	//db.First(&provincia, "id = ?", legajo_id)
+
+	/*	var p structLegajo.Provincia
+
+		p.Nombre = "Buenos Aires"
+		db.Create(&p)*/
+
+	/*var p structLegajo.Pais
+
+	p.Nombre = "Argentina"
+	db.Create(&p)
+	*/
+	/*var p structLegajo.Provincia
+	p.PaisId = 2
+	db.Model(structLegajo.Provincia{}).Where("id = ?", 2).Updates(p)
+	db.Where(&p).First(&p)*/
+
+	//db.First(&provincia, legajo_id)
+
+	db.Set("gorm:auto_preload", true).Where("id = ?", legajo_id).Find(&provincia)
+
+	//db.Find(&provincia, structLegajo.Provincia{Nombre: "Buenos Aires"})
+
+	db.Close()
+
+	respondJSON(w, 202, provincia)
 }
