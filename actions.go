@@ -121,12 +121,12 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
-	params := mux.Vars(r)
-	legajo_id := params["id"]
+	//params := mux.Vars(r)
+	//legajo_id := params["id"]
 
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo_data structLegajo.Legajo
+	var legajo, legajo_data structLegajo.Legajo
 	err := decoder.Decode(&legajo_data)
 
 	if err != nil {
@@ -141,7 +141,11 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	//Modifica el legajo que cumpla con la condición
-	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
+	//db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Update(legajo_data)
+	db.Model(&legajo).Association("Hijos").Replace(legajo_data)
+	db.Save(&legajo_data)
+
+	//db.Model(structLegajo.Legajo{}.Hijos).Where("legajoid = ?", legajo_id).Update(legajo_data.Hijos)
 
 	respondJSON(w, 202, legajo_data)
 

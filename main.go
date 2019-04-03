@@ -18,8 +18,8 @@ func main() {
 
 	db.AutoMigrate(&structLegajo.Pais{}, &structLegajo.Provincia{}, &structLegajo.Localidad{}, &structLegajo.Zona{}, &structLegajo.Modalidadcontratacion{}, &structLegajo.Situacion{}, &structLegajo.Condicion{}, &structLegajo.Condicionsiniestrado{}, &structLegajo.Conveniocolectivo{}, &structLegajo.Centrodecosto{}, &structLegajo.Obrasocial{}, &structLegajo.Conyuge{}, &structLegajo.Hijo{}, &structLegajo.Legajo{})
 
-	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "NO ACTION", "NO ACTION")
-	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "NO ACTION", "NO ACTION")
+	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
+	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
 
 	//db.CreateTable(&structLegajo.Legajo{})
 
