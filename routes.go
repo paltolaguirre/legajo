@@ -36,31 +36,31 @@ var routes = Routes{
 	Route{
 		"LegajoShow",
 		"GET",
-		"/legajo/{id}",
+		"/legajos/{id}",
 		LegajoShow,
 	},
 	Route{
 		"LegajoAdd",
 		"POST",
-		"/legajo",
+		"/legajos",
 		LegajoAdd,
 	},
 	Route{
 		"LegajoUpdate",
 		"PUT",
-		"/legajo/{id}",
+		"/legajos/{id}",
 		LegajoUpdate,
 	},
 	Route{
 		"LegajoPatch",
 		"PATCH",
-		"/legajo/{id}",
+		"/legajos/{id}",
 		LegajoPatch,
 	},
 	Route{
 		"LegajoRemove",
 		"DELETE",
-		"/legajo/{id}",
+		"/legajos/{id}",
 		LegajoRemove,
 	},
 	Route{
