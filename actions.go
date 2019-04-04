@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -43,22 +43,20 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	if tokenError != nil {
 
 		errorToken := *tokenError
-
 		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
 
 	} else {
 		token := *tokenAutenticacion
 		tenant := token.Tenant
-		fmt.Println(tenant)
+
 		db := conexionBD.ConnectBD(tenant)
+		defer db.Close()
 
 		var legajos []structLegajo.Legajo
 
 		//Lista todos los legajos
-		fmt.Println("Los legajos de la BD son: ")
 		db.Find(&legajos)
 
-		fmt.Println(legajos)
 		respondJSON(w, 202, legajos)
 	}
 
@@ -76,16 +74,17 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		params := mux.Vars(r) //TODO: es global..? quizas usar el r
 		legajo_id := params["id"]
-		fmt.Println(legajo_id)
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		//db.First(&legajo, "id = ?", legajo_id)
 		token := *tokenAutenticacion
 		tenant := token.Tenant
+
 		db := conexionBD.ConnectBD(tenant)
+		defer db.Close()
+
 		db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id)
-		db.Close()
 
 		respondJSON(w, 202, legajo)
 	}
@@ -104,15 +103,12 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	db := conexionBD.ConnectBD("tenant")
-
+	defer db.Close()
 	//Para cerrar la lectura de algo
 	defer r.Body.Close()
 
-	log.Println(legajo_data)
-
 	if err := db.Create(&legajo_data).Error; err != nil {
-		fmt.Println("Error")
-		fmt.Println(err)
+		respondError(w, 500, err.Error())
 	}
 
 	respondJSON(w, 202, legajo_data)
@@ -121,33 +117,47 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
-	//params := mux.Vars(r)
-	//legajo_id := params["id"]
+	params := mux.Vars(r)
+	param_legajoid, _ := strconv.ParseUint(params["id"], 10, 64)
+	p_legajoid := uint(param_legajoid)
+
+	if p_legajoid == 0 {
+		respondError(w, 404, "Debe ingresar un ID en la url")
+	}
 
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo, legajo_data structLegajo.Legajo
+	var legajo_data_db_current, legajo_data structLegajo.Legajo
 	err := decoder.Decode(&legajo_data)
+	legajoid := legajo_data.ID
 
 	if err != nil {
 		panic(err)
-		w.WriteHeader(500)
+		respondError(w, 500, err.Error())
 		return
 	}
-	fmt.Println(legajo_data)
-	db := conexionBD.ConnectBD("tenant")
 
-	//cortar la lectura del body
-	defer r.Body.Close()
+	if p_legajoid == legajoid || legajoid == 0 {
+		legajo_data.ID = uint(param_legajoid)
+		db := conexionBD.ConnectBD("tenant")
+		//cortar la lectura del body
+		defer r.Body.Close()
 
-	//Modifica el legajo que cumpla con la condición
-	//db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Update(legajo_data)
-	db.Model(&legajo).Association("Hijos").Replace(legajo_data)
-	db.Save(&legajo_data)
+		db.First(&legajo_data_db_current, "id = ?", param_legajoid)
 
-	//db.Model(structLegajo.Legajo{}.Hijos).Where("legajoid = ?", legajo_id).Update(legajo_data.Hijos)
+		//Modifica el legajo que cumpla con la condición
+		//db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Update(legajo_data)
 
-	respondJSON(w, 202, legajo_data)
+		db.Model(&legajo_data_db_current).Association("Hijos").Replace(legajo_data.Hijos)
+		db.Save(&legajo_data)
+
+		//db.Model(structLegajo.Legajo{}.Hijos).Where("legajoid = ?", legajo_id).Update(legajo_data.Hijos)
+
+		respondJSON(w, 202, legajo_data)
+
+	} else {
+		respondError(w, 404, "El ID de la url debe ser el mismo que el del struct")
+	}
 
 }
 
@@ -163,7 +173,7 @@ func LegajoPatch(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		panic(err)
-		w.WriteHeader(500)
+		respondError(w, 500, err.Error())
 		return
 	}
 	fmt.Println(legajo_data)
