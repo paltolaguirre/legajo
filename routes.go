@@ -63,10 +63,4 @@ var routes = Routes{
 		"/legajos/{id}",
 		LegajoRemove,
 	},
-	Route{
-		"ProvinciaShow",
-		"GET",
-		"/provincia/{id}",
-		ProvinciaShow,
-	},
 }

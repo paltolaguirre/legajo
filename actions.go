@@ -44,6 +44,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 
 		errorToken := *tokenError
 		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
+		return
 
 	} else {
 		token := *tokenAutenticacion
@@ -57,7 +58,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 		//Lista todos los legajos
 		db.Find(&legajos)
 
-		respondJSON(w, 202, legajos)
+		respondJSON(w, http.StatusOK, legajos)
 	}
 
 }
@@ -68,7 +69,7 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 	if tokenError != nil {
 		errorToken := *tokenError
 		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
-		fmt.Println(errorToken)
+		return
 
 	} else {
 
@@ -77,16 +78,18 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		//db.First(&legajo, "id = ?", legajo_id)
 		token := *tokenAutenticacion
 		tenant := token.Tenant
 
 		db := conexionBD.ConnectBD(tenant)
 		defer db.Close()
 
-		db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id)
+		if err := db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id).Error; gorm.IsRecordNotFoundError(err) {
+			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
 
-		respondJSON(w, 202, legajo)
+		respondJSON(w, http.StatusOK, legajo)
 	}
 
 }
@@ -97,21 +100,22 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 	var legajo_data structLegajo.Legajo
 	//&nombre_var para decirle que es la var que no tiene datos y va a tener que rellenar
-	err := decoder.Decode(&legajo_data)
-
-	if err != nil {
-		panic(err)
+	if err := decoder.Decode(&legajo_data); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
 	}
+	defer r.Body.Close()
+
 	db := conexionBD.ConnectBD("tenant")
 	defer db.Close()
 	//Para cerrar la lectura de algo
-	defer r.Body.Close()
 
 	if err := db.Create(&legajo_data).Error; err != nil {
-		respondError(w, 500, err.Error())
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	respondJSON(w, 202, legajo_data)
+	respondJSON(w, http.StatusCreated, legajo_data)
 
 }
 
@@ -122,46 +126,54 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 	p_legajoid := uint(param_legajoid)
 
 	if p_legajoid == 0 {
-		respondError(w, 404, "Debe ingresar un ID en la url")
+		respondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
 
-	var legajo_data_db_current, legajo_data structLegajo.Legajo
-	err := decoder.Decode(&legajo_data)
-	legajoid := legajo_data.ID
+	var legajo_data structLegajo.Legajo
 
-	if err != nil {
-		panic(err)
-		respondError(w, 500, err.Error())
+	if err := decoder.Decode(&legajo_data); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	defer r.Body.Close()
+
+	legajoid := legajo_data.ID
 
 	if p_legajoid == legajoid || legajoid == 0 {
-		legajo_data.ID = uint(param_legajoid)
-		db := conexionBD.ConnectBD("tenant")
-		//cortar la lectura del body
-		defer r.Body.Close()
 
-		db.First(&legajo_data_db_current, "id = ?", param_legajoid)
+		legajo_data.ID = uint(param_legajoid)
+
+		db := conexionBD.ConnectBD("tenant")
+		defer db.Close()
+
+		//cortar la lectura del body
+
+		//db.First(&legajo_data_db_current, "id = ?", param_legajoid)
 
 		//Modifica el legajo que cumpla con la condición
 		//db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Update(legajo_data)
 
-		db.Model(&legajo_data_db_current).Association("Hijos").Replace(legajo_data.Hijos)
-		db.Save(&legajo_data)
+		//db.Model(&legajo_data_db_current).Association("Hijos").Replace(legajo_data.Hijos)
+		if err := db.Save(&legajo_data).Error; err != nil {
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
 		//db.Model(structLegajo.Legajo{}.Hijos).Where("legajoid = ?", legajo_id).Update(legajo_data.Hijos)
 
-		respondJSON(w, 202, legajo_data)
+		respondJSON(w, http.StatusOK, legajo_data)
 
 	} else {
-		respondError(w, 404, "El ID de la url debe ser el mismo que el del struct")
+		respondError(w, http.StatusNotFound, "El ID de la url debe ser el mismo que el del struct")
+		return
 	}
 
 }
 
-func LegajoPatch(w http.ResponseWriter, r *http.Request) {
+/*func LegajoPatch(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	legajo_id := params["id"]
@@ -183,9 +195,9 @@ func LegajoPatch(w http.ResponseWriter, r *http.Request) {
 	//Modifica el legajo que cumpla con la condición
 	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
 
-	respondJSON(w, 202, legajo_data)
+	respondJSON(w, http.StatusOK, legajo_data)
 
-}
+}*/
 
 type Message struct {
 	Status  string `json: "status"`
@@ -215,8 +227,11 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(legajo_id)
 	db := conexionBD.ConnectBD("tenant")
 
-	db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{})
+	if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
 
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	//--Borrado Logico
 	//db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
 
@@ -228,7 +243,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 
 	results := message
 
-	respondJSON(w, 200, results)
+	respondJSON(w, http.StatusOK, results)
 
 }
 
@@ -263,43 +278,4 @@ func checkTokenValido(r *http.Request) (*publico.TokenAutenticacion, *publico.Er
 	}
 
 	return tokenAutenticacion, tokenError
-}
-
-func ProvinciaShow(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r) //TODO: es global..? quizas usar el r
-	legajo_id := params["id"]
-	fmt.Println(legajo_id)
-
-	var provincia structLegajo.Provincia //Con &var --> lo que devuelve el metodo se le asigna a la var
-
-	//db.First(&legajo, "id = ?", legajo_id)
-
-	db := conexionBD.ConnectBD("")
-	//db.First(&provincia, "id = ?", legajo_id)
-
-	/*	var p structLegajo.Provincia
-
-		p.Nombre = "Buenos Aires"
-		db.Create(&p)*/
-
-	/*var p structLegajo.Pais
-
-	p.Nombre = "Argentina"
-	db.Create(&p)
-	*/
-	/*var p structLegajo.Provincia
-	p.PaisId = 2
-	db.Model(structLegajo.Provincia{}).Where("id = ?", 2).Updates(p)
-	db.Where(&p).First(&p)*/
-
-	//db.First(&provincia, legajo_id)
-
-	db.Set("gorm:auto_preload", true).Where("id = ?", legajo_id).Find(&provincia)
-
-	//db.Find(&provincia, structLegajo.Provincia{Nombre: "Buenos Aires"})
-
-	db.Close()
-
-	respondJSON(w, 202, provincia)
 }

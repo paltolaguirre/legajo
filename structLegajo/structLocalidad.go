@@ -10,6 +10,6 @@ type Localidad struct {
 	Codigo      string
 	Descripcion string
 	Activo      int
-	Provincia   Provincia `gorm:"ForeignKey:Provinciaid;association_foreignkey:ID"`
-	Provinciaid uint      `sql:"type:int REFERENCES Provincia(ID)"`
+	//Provincia   Provincia `gorm:"ForeignKey:Provinciaid;association_foreignkey:ID"`
+	Provinciaid uint `sql:"type:int REFERENCES Provincia(ID)"`
 }
