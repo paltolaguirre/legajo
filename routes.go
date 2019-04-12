@@ -51,12 +51,12 @@ var routes = Routes{
 		"/legajos/{id}",
 		LegajoUpdate,
 	},
-	Route{
+	/*Route{
 		"LegajoPatch",
 		"PATCH",
 		"/legajos/{id}",
 		LegajoPatch,
-	},
+	},*/
 	Route{
 		"LegajoRemove",
 		"DELETE",
