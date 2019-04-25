@@ -6,8 +6,8 @@ import (
 
 type Pais struct {
 	gorm.Model
-	Nombre      string
-	Codigo      string
-	Descripcion string
-	Activo      int
+	Nombre      string `json:"nombre"`
+	Codigo      string `json:"codigo"`
+	Descripcion string `json:"descripcion"`
+	Activo      int    `json:"activo"`
 }
