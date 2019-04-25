@@ -1,28 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/xubiosueldos/conexionBD"
-	"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 func main() {
-	tenant := "algo"
+	var tenant string = "public"
 	db := conexionBD.ConnectBD(tenant)
 
-	db.SingularTable(true)
-
-	//para actualizar tablas...agrega columnas e indices, pero no elimina
-
-	db.AutoMigrate(&structLegajo.Pais{}, &structLegajo.Provincia{}, &structLegajo.Localidad{}, &structLegajo.Zona{}, &structLegajo.Modalidadcontratacion{}, &structLegajo.Situacion{}, &structLegajo.Condicion{}, &structLegajo.Condicionsiniestrado{}, &structLegajo.Conveniocolectivo{}, &structLegajo.Centrodecosto{}, &structLegajo.Obrasocial{}, &structLegajo.Conyuge{}, &structLegajo.Hijo{}, &structLegajo.Legajo{})
-
-	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
-	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
-
-	//db.CreateTable(&structLegajo.Legajo{})
-
+	fmt.Println(db)
 	router := newRouter()
 
 	server := http.ListenAndServe(":8080", router)
