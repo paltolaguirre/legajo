@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -14,9 +13,6 @@ import (
 	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/legajo/structLegajo"
 )
-
-var db *gorm.DB
-var err error
 
 func respondJSON(w http.ResponseWriter, status int, results interface{}) {
 
@@ -41,16 +37,11 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	tokenAutenticacion, tokenError := checkTokenValido(r)
 
 	if tokenError != nil {
-
-		errorToken := *tokenError
-		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
+		errorToken(w, tokenError)
 		return
-
 	} else {
-		token := *tokenAutenticacion
-		tenant := token.Tenant
 
-		db := conexionBD.ConnectBD(tenant)
+		db := obtenerDB(tokenAutenticacion)
 		defer db.Close()
 
 		var legajos []structLegajo.Legajo
@@ -66,24 +57,21 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 	tokenAutenticacion, tokenError := checkTokenValido(r)
-	if tokenError != nil {
-		errorToken := *tokenError
-		respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
-		return
 
+	if tokenError != nil {
+		errorToken(w, tokenError)
+		return
 	} else {
 
-		params := mux.Vars(r) //TODO: es global..? quizas usar el r
+		params := mux.Vars(r)
 		legajo_id := params["id"]
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		token := *tokenAutenticacion
-		tenant := token.Tenant
-
-		db := conexionBD.ConnectBD(tenant)
+		db := obtenerDB(tokenAutenticacion)
 		defer db.Close()
 
+		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id).Error; gorm.IsRecordNotFoundError(err) {
 			respondError(w, http.StatusNotFound, err.Error())
 			return
@@ -96,154 +84,156 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
-	decoder := json.NewDecoder(r.Body)
+	tokenAutenticacion, tokenError := checkTokenValido(r)
 
-	var legajo_data structLegajo.Legajo
-	//&nombre_var para decirle que es la var que no tiene datos y va a tener que rellenar
-	if err := decoder.Decode(&legajo_data); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+	if tokenError != nil {
+		errorToken(w, tokenError)
 		return
-	}
-	defer r.Body.Close()
+	} else {
 
-	db := conexionBD.ConnectBD("tenant")
-	defer db.Close()
-	//Para cerrar la lectura de algo
+		decoder := json.NewDecoder(r.Body)
 
-	if err := db.Create(&legajo_data).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+		var legajo_data structLegajo.Legajo
 
-	respondJSON(w, http.StatusCreated, legajo_data)
+		//&legajo_data para decirle que es la var que no tiene datos y va a tener que rellenar
+		if err := decoder.Decode(&legajo_data); err != nil {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-}
+		defer r.Body.Close()
 
-func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r)
-	param_legajoid, _ := strconv.ParseUint(params["id"], 10, 64)
-	p_legajoid := uint(param_legajoid)
-
-	if p_legajoid == 0 {
-		respondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
-		return
-	}
-
-	decoder := json.NewDecoder(r.Body)
-
-	var legajo_data structLegajo.Legajo
-
-	if err := decoder.Decode(&legajo_data); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	defer r.Body.Close()
-
-	legajoid := legajo_data.ID
-
-	if p_legajoid == legajoid || legajoid == 0 {
-
-		legajo_data.ID = uint(param_legajoid)
-
-		db := conexionBD.ConnectBD("tenant")
+		db := obtenerDB(tokenAutenticacion)
 		defer db.Close()
 
-		//cortar la lectura del body
-
-		//db.First(&legajo_data_db_current, "id = ?", param_legajoid)
-
-		//Modifica el legajo que cumpla con la condición
-		//db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Update(legajo_data)
-
-		//db.Model(&legajo_data_db_current).Association("Hijos").Replace(legajo_data.Hijos)
-		if err := db.Save(&legajo_data).Error; err != nil {
+		if err := db.Create(&legajo_data).Error; err != nil {
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		//db.Model(structLegajo.Legajo{}.Hijos).Where("legajoid = ?", legajo_id).Update(legajo_data.Hijos)
+		respondJSON(w, http.StatusCreated, legajo_data)
+	}
+}
 
-		respondJSON(w, http.StatusOK, legajo_data)
+func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
+	tokenAutenticacion, tokenError := checkTokenValido(r)
+
+	if tokenError != nil {
+
+		errorToken(w, tokenError)
+		return
 	} else {
-		respondError(w, http.StatusNotFound, "El ID de la url debe ser el mismo que el del struct")
-		return
+
+		params := mux.Vars(r)
+		//se convirtió el string en uint para poder comparar
+		param_legajoid, _ := strconv.ParseUint(params["id"], 10, 64)
+		p_legajoid := uint(param_legajoid)
+
+		if p_legajoid == 0 {
+			respondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
+			return
+		}
+
+		decoder := json.NewDecoder(r.Body)
+
+		var legajo_data structLegajo.Legajo
+
+		if err := decoder.Decode(&legajo_data); err != nil {
+			respondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		defer r.Body.Close()
+
+		legajoid := legajo_data.ID
+
+		if p_legajoid == legajoid || legajoid == 0 {
+
+			legajo_data.ID = p_legajoid
+
+			db := obtenerDB(tokenAutenticacion)
+			defer db.Close()
+
+			//abro una transacción para que si hay un error no persista en la DB
+			tx := db.Begin()
+
+			//modifico el legajo de acuerdo a lo enviado en el json
+			if err := tx.Save(&legajo_data).Error; err != nil {
+				tx.Rollback()
+				respondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			//despues de modificar, recorro los hijos asociados al legajo para ver si alguno fue eliminado logicamente y lo elimino de la BD
+			if err := tx.Model(structLegajo.Hijo{}).Unscoped().Where("legajoid = ? AND deleted_at is not null", legajoid).Delete(structLegajo.Hijo{}).Error; err != nil {
+				tx.Rollback()
+				respondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			//despues de modificar, recorro el conyuge asociado al legajo para ver si fue eliminado logicamente y lo elimino de la BD
+			if err := tx.Model(structLegajo.Conyuge{}).Unscoped().Where("legajoid = ? AND deleted_at is not null", legajoid).Delete(structLegajo.Conyuge{}).Error; err != nil {
+				tx.Rollback()
+				respondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			tx.Commit()
+
+			respondJSON(w, http.StatusOK, legajo_data)
+
+		} else {
+			respondError(w, http.StatusNotFound, "El ID de la url debe ser el mismo que el del struct")
+			return
+		}
 	}
 
-}
-
-/*func LegajoPatch(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r)
-	legajo_id := params["id"]
-
-	decoder := json.NewDecoder(r.Body)
-
-	var legajo_data structLegajo.Legajo
-	err := decoder.Decode(&legajo_data)
-
-	if err != nil {
-		panic(err)
-		respondError(w, 500, err.Error())
-		return
-	}
-	fmt.Println(legajo_data)
-	//cortar la lectura del body
-	defer r.Body.Close()
-
-	//Modifica el legajo que cumpla con la condición
-	db.Model(structLegajo.Legajo{}).Where("id = ?", legajo_id).Updates(legajo_data)
-
-	respondJSON(w, http.StatusOK, legajo_data)
-
-}*/
-
-type Message struct {
-	Status  string `json: "status"`
-	Message string `json: "message"`
-}
-
-//Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
-//Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
-func (this *Message) setStatus(data string) {
-	this.Status = data
-}
-
-//Forma de asociar el metodo con la estructura --> this puede ser cualquier nombre, no precisamente tiene que ser this
-//Va el * para pasarselo como puntero y quien use los metodos realmente modifiquen la estructura
-func (this *Message) setMessage(data string) {
-	this.Message = data
 }
 
 func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 
-	//Para obtener los parametros por la url
-	params := mux.Vars(r)
-	legajo_id := params["id"]
+	tokenAutenticacion, tokenError := checkTokenValido(r)
 
-	//Eliminar legajo según condición
-	//--Borrado Fisico
-	fmt.Println(legajo_id)
-	db := conexionBD.ConnectBD("tenant")
+	if tokenError != nil {
 
-	if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
-
-		respondError(w, http.StatusInternalServerError, err.Error())
+		errorToken(w, tokenError)
 		return
+	} else {
+
+		//Para obtener los parametros por la url
+		params := mux.Vars(r)
+		legajo_id := params["id"]
+
+		db := obtenerDB(tokenAutenticacion)
+		defer db.Close()
+
+		//--Borrado Fisico
+		if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
+
+			respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		//--Borrado Logico
+		//db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
+		//db.Delete(Legajo{}, "descripcion = ?", "Probando Update")
+
+		respondJSON(w, http.StatusOK, "El legajo con ID "+legajo_id+" ha sido eliminado correctamente")
 	}
-	//--Borrado Logico
-	//db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
 
-	//db.Delete(Legajo{}, "descripcion = ?", "Probando Update")
+}
 
-	message := new(Message)
-	message.setStatus("success")
-	message.setMessage("El legajo con ID " + legajo_id + " ha sido eliminado correctamente")
+func obtenerDB(tokenAutenticacion *publico.TokenAutenticacion) *gorm.DB {
 
-	results := message
+	token := *tokenAutenticacion
+	tenant := token.Tenant
 
-	respondJSON(w, http.StatusOK, results)
+	return conexionBD.ConnectBD(tenant)
+
+}
+
+func errorToken(w http.ResponseWriter, tokenError *publico.Error) {
+	errorToken := *tokenError
+	respondError(w, errorToken.ErrorCodigo, errorToken.ErrorNombre)
 
 }
 
