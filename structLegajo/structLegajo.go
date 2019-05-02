@@ -41,8 +41,8 @@ type Legajo struct {
 	Conveniocolectivo       *Conveniocolectivo     `json:"conveniocolectivo" gorm:"ForeignKey:Conveniocolectivoid;association_foreignkey:ID;association_autoupdate:false"`
 	Conveniocolectivoid     *uint                  `json:"conveniocolectivoid" sql:"type:int REFERENCES Conveniocolectivo(ID)"`
 	Valorfijolrt            int                    `json:"valorfijolrt"`
-	Conyuge                 *[]Conyuge             `json:"conyuge" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
-	Hijos                   *[]Hijo                `json:"hijos" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
+	Conyuge                 []Conyuge              `json:"conyuge" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
+	Hijos                   []Hijo                 `json:"hijos" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
 	Remuneracion            int                    `json:"remuneracion"`
 	HorasMensualesNormales  string                 `json:"horasmensualesnormales"`
 	Fechaalta               time.Time              `json:"fechaalta"`
