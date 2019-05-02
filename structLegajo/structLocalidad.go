@@ -11,5 +11,5 @@ type Localidad struct {
 	Descripcion string `json:"descripcion"`
 	Activo      int    `json:"activo"`
 	//Provincia   Provincia `gorm:"ForeignKey:Provinciaid;association_foreignkey:ID"`
-	Provinciaid uint `json:"provinciaid" sql:"type:int REFERENCES Provincia(ID)"`
+	Provinciaid *uint `json:"provinciaid" sql:"type:int REFERENCES Provincia(ID)"`
 }
