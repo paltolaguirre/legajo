@@ -117,7 +117,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 		p_legajoid := uint(param_legajoid)
 
 		if p_legajoid == 0 {
-			framework.RespondError(w, http.StatusNotFound, "Debe ingresar un ID en la url")
+			framework.RespondError(w, http.StatusNotFound, framework.IdParametroVacio)
 			return
 		}
 
@@ -170,7 +170,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			framework.RespondJSON(w, http.StatusOK, legajo_data)
 
 		} else {
-			framework.RespondError(w, http.StatusNotFound, "El ID de la url debe ser el mismo que el del struct")
+			framework.RespondError(w, http.StatusNotFound, framework.IdParametroDistintoStruct)
 			return
 		}
 	}
@@ -252,7 +252,7 @@ func checkTokenValido(r *http.Request) (*publico.TokenAutenticacion, *publico.Er
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	if res.StatusCode != 400 {
+	if res.StatusCode != http.StatusBadRequest {
 
 		// tokenAutenticacion = &(TokenAutenticacion{})
 		tokenAutenticacion = new(publico.TokenAutenticacion)
