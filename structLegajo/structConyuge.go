@@ -1,11 +1,9 @@
 package structLegajo
 
-import (
-	"github.com/jinzhu/gorm"
-)
+import "github.com/xubiosueldos/conexionBD/structGormModel"
 
 type Conyuge struct {
-	gorm.Model
+	structGormModel.GormModel
 	Nombre       string      `json:"nombre"`
 	Apellido     string      `json:"apellido"`
 	Codigo       string      `json:"codigo"`
