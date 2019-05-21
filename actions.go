@@ -15,13 +15,15 @@ import (
 	"github.com/xubiosueldos/legajo/structLegajo"
 )
 
+var nombreMicroservicio string = "legajo"
+
 func LegajoList(w http.ResponseWriter, r *http.Request) {
 
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 
 		var legajos []structLegajo.Legajo
@@ -43,8 +45,8 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
@@ -75,8 +77,8 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 
 		if err := db.Create(&legajo_data).Error; err != nil {
@@ -95,8 +97,8 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 		params := mux.Vars(r)
 		//se convirtió el string en uint para poder comparar
-		param_legajoid, _ := strconv.ParseUint(params["id"], 10, 64)
-		p_legajoid := uint(param_legajoid)
+		param_legajoid, _ := strconv.ParseInt(params["id"], 10, 64)
+		p_legajoid := int(param_legajoid)
 
 		if p_legajoid == 0 {
 			framework.RespondError(w, http.StatusNotFound, framework.IdParametroVacio)
@@ -119,8 +121,8 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			legajo_data.ID = p_legajoid
 
-			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion)
-			automigrateTablasPrivadas(db)
+			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+
 			defer db.Close()
 
 			//abro una transacción para que si hay un error no persista en la DB
@@ -167,8 +169,8 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		legajo_id := params["id"]
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion)
-		automigrateTablasPrivadas(db)
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+
 		defer db.Close()
 
 		//--Borrado Fisico
@@ -186,7 +188,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func automigrateTablasPrivadas(db *gorm.DB) {
+func AutomigrateTablasPrivadas(db *gorm.DB) {
 
 	//para actualizar tablas...agrega columnas e indices, pero no elimina
 	db.AutoMigrate(&structLegajo.Conyuge{}, &structLegajo.Hijo{}, &structLegajo.Legajo{})
