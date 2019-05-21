@@ -11,6 +11,6 @@ type Hijo struct {
 	Activo       int         `json:"activo"`
 	Cuil         string      `json:"cuil"`
 	Obrasocial   *Obrasocial `json:"obrasocial" gorm:"ForeignKey:Obrasocialid;association_foreignkey:ID"`
-	Obrasocialid *uint       `json:"obrasocialid" sql:"type:int REFERENCES Obrasocial(ID)"`
-	Legajoid     *uint       `json:"legajoid"` //`sql:"type:int REFERENCES Legajo(ID)"`
+	Obrasocialid *int        `json:"obrasocialid" sql:"type:int REFERENCES Obrasocial(ID)"`
+	Legajoid     *int        `json:"legajoid"` //`sql:"type:int REFERENCES Legajo(ID)"`
 }

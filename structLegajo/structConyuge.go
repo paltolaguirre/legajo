@@ -11,6 +11,6 @@ type Conyuge struct {
 	Activo       int         `json:"activo"`
 	Cuil         string      `json:"cuil"`
 	Obrasocial   *Obrasocial `json:"obrasocial" gorm:"ForeignKey:Obrasocialid;association_foreignkey:ID"`
-	Obrasocialid *uint       `json:"obrasocialid" sql:"type:int REFERENCES Obrasocial(ID)"`
-	Legajoid     *uint       `json:"legajoid"`
+	Obrasocialid *int        `json:"obrasocialid" sql:"type:int REFERENCES Obrasocial(ID)"`
+	Legajoid     *int        `json:"legajoid"`
 }
