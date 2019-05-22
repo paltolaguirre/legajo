@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/xubiosueldos/framework/configuracion"
+
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -22,7 +24,8 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+		versionMicroservicio := obtenerVersionLegajo()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -45,7 +48,8 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+		versionMicroservicio := obtenerVersionLegajo()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -77,7 +81,8 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+		versionMicroservicio := obtenerVersionLegajo()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -121,7 +126,8 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			legajo_data.ID = p_legajoid
 
-			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+			versionMicroservicio := obtenerVersionLegajo()
+			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 			defer db.Close()
 
@@ -169,7 +175,8 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		legajo_id := params["id"]
 
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, AutomigrateTablasPrivadas)
+		versionMicroservicio := obtenerVersionLegajo()
+		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -195,4 +202,10 @@ func AutomigrateTablasPrivadas(db *gorm.DB) {
 
 	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
 	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
+}
+
+func obtenerVersionLegajo() int {
+	configuracion := configuracion.GetInstance()
+
+	return configuracion.Versionlegajo
 }
