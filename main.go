@@ -14,7 +14,7 @@ func main() {
 	var tokenAutenticacion publico.Security
 	tokenAutenticacion.Tenant = "public"
 
-	apiclientconexionbd.ObtenerDB(&tokenAutenticacion, "legajo", 1, AutomigrateTablasPublicas)
+	apiclientconexionbd.ObtenerDB(&tokenAutenticacion, nombreMicroservicio, obtenerVersionLegajo(), AutomigrateTablasPublicas)
 
 	router := newRouter()
 
