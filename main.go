@@ -7,10 +7,12 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/xubiosueldos/autenticacion/publico"
 	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/framework/configuracion"
 	"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 func main() {
+	configuracion := configuracion.GetInstance()
 	var tokenAutenticacion publico.Security
 	tokenAutenticacion.Tenant = "public"
 
@@ -18,7 +20,7 @@ func main() {
 
 	router := newRouter()
 
-	server := http.ListenAndServe(":8083", router)
+	server := http.ListenAndServe(":"+configuracion.Puertomicroserviciolegajo, router)
 
 	log.Fatal(server)
 
