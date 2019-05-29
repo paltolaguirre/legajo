@@ -131,6 +131,10 @@ github.com/xubiosueldos/framework v0.0.0-20190523162534-7406929b8045/go.mod h1:A
 github.com/xubiosueldos/framework v0.0.0-20190528205049-f5e7c42b2284/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
 github.com/xubiosueldos/framework v0.0.0-20190529121816-b7b82cfa233f h1:n8+so/DAbP+bep6vRoX1ZuuCKf18YVdjY9qjF771CV0=
 github.com/xubiosueldos/framework v0.0.0-20190529121816-b7b82cfa233f/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
+github.com/xubiosueldos/framework v0.0.0-20190529164424-c83c1876c539 h1:haR6Kw2yEQMzYsR58NbjVIOdW9UkZYZmhQaGsaGKoAY=
+github.com/xubiosueldos/framework v0.0.0-20190529164424-c83c1876c539/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
+github.com/xubiosueldos/framework v0.0.0-20190529164905-92d0e9c1ee2e h1:e8hkD9XgeN6vjB53msrDYiLw4Fn7cwrc1v5Z8oVogPw=
+github.com/xubiosueldos/framework v0.0.0-20190529164905-92d0e9c1ee2e/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
 github.com/xubiosueldos/legajo v1.0.0 h1:GCrlYMgDceGIaofSBvph4JYSxF84Mc2Rj/KIHLDAZUk=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
