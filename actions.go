@@ -190,7 +190,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		//db.Where("descripcion = ?", "Probando Update").Delete(Legajo{})
 		//db.Delete(Legajo{}, "descripcion = ?", "Probando Update")
 
-		framework.RespondJSON(w, http.StatusOK, framework.LegajoEliminado+legajo_id)
+		framework.RespondJSON(w, http.StatusOK, framework.Legajo+legajo_id+framework.MicroservicioEliminado)
 	}
 
 }
