@@ -19,6 +19,11 @@ import (
 
 var nombreMicroservicio string = "legajo"
 
+// Sirve para controlar si el server esta OK
+func Healthy(writer http.ResponseWriter, request *http.Request) {
+	writer.Write([]byte("Healthy"))
+}
+
 func LegajoList(w http.ResponseWriter, r *http.Request) {
 
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
