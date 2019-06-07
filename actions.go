@@ -25,7 +25,9 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	if tokenValido {
 
 		versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -49,7 +51,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
 		versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -82,7 +86,9 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
 		versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
@@ -127,7 +133,9 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			legajo_data.ID = p_legajoid
 
 			versionMicroservicio := obtenerVersionLegajo()
-			db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 			defer db.Close()
 
@@ -176,7 +184,9 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		legajo_id := params["id"]
 
 		versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tokenAutenticacion, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
 		defer db.Close()
 
