@@ -29,8 +29,8 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
-
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 		var legajos []structLegajo.Legajo
 
 		//Lista todos los legajos
@@ -55,7 +55,8 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
+		//defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id).Error; gorm.IsRecordNotFoundError(err) {
@@ -90,7 +91,8 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-		defer db.Close()
+		//	defer db.Close()
+		defer apiclientconexionbd.CerrarDB(db)
 
 		if err := db.Create(&legajo_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -137,7 +139,8 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 
-			defer db.Close()
+			//defer db.Close()
+			defer apiclientconexionbd.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -187,8 +190,8 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		defer db.Close()
+		//defer db.Close()
+		apiclientconexionbd.CerrarDB(db)
 
 		//--Borrado Fisico
 		if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
