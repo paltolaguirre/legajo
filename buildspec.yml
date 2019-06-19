@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     IMAGE_REPO_NAME: "xubio/sueldos/legajo"
-    TASK_DEFINITION_NAME: "sueldos-frontend"
+    TASK_DEFINITION_NAME: "sueldos-legajo"
 
 phases:
   install:
