@@ -196,7 +196,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
 		//defer db.Close()
-		apiclientconexionbd.CerrarDB(db)
+		defer apiclientconexionbd.CerrarDB(db)
 
 		//--Borrado Fisico
 		if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
