@@ -58,6 +58,12 @@ var routes = Routes{
 		LegajoRemove,
 	},
 	Route{
+		"LegajosRemoveMasivo",
+		"DELETE",
+		"/api/legajo/legajos",
+		LegajosRemoveMasivo,
+	},
+	Route{
 		"Healthy",
 		"GET",
 		"/api/legajo/healthy",
