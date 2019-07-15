@@ -248,6 +248,8 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 					resultadoDeEliminacion[legajo_id] = "Fue eliminado con exito"
 				}
 			}
+		} else {
+			framework.RespondError(w, http.StatusInternalServerError, "Seleccione por lo menos un registro")
 		}
 
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
