@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -12,6 +16,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
+	"github.com/xubiosueldos/autenticacion/publico"
 	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
 	"github.com/xubiosueldos/framework"
 	"github.com/xubiosueldos/legajo/structLegajo"
@@ -19,6 +24,15 @@ import (
 
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
+}
+
+type strHlprServlet struct {
+	//	gorm.Model
+	Username string `json:"username"`
+	Tenant   string `json:"tenant"`
+	Token    string `json:"token"`
+	Options  string `json:"options"`
+	Id       string `json:"id"`
 }
 
 var nombreMicroservicio string = "legajo"
@@ -73,6 +87,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "CentroDeCosto", strconv.Itoa(*legajo.Centrodecostoid))
+
+		legajo.Centrodecosto = centroDeCosto
 		framework.RespondJSON(w, http.StatusOK, legajo)
 	}
 
@@ -255,6 +272,62 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
 	}
 
+}
+
+func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) *structLegajo.Centrodecosto {
+	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id)
+	var centroDeCosto structLegajo.Centrodecosto
+	json.Unmarshal([]byte(str), &centroDeCosto)
+
+	return &centroDeCosto
+
+}
+
+func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) string {
+	var strHlprSrv strHlprServlet
+	token := *tokenAutenticacion
+
+	strHlprSrv.Tenant = token.Tenant
+	strHlprSrv.Token = token.Token
+	strHlprSrv.Username = token.Username
+	strHlprSrv.Id = id
+
+	pagesJson, err := json.Marshal(strHlprSrv)
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	url := configuracion.GetUrlMonolitico() + codigo + "GoServlet"
+
+	fmt.Println("URL:>", url)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+
+	str := string(body)
+	fmt.Println("BYTES RECIBIDOS :", len(str))
+
+	return str
 }
 
 func AutomigrateTablasPrivadas(db *gorm.DB) {
