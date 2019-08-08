@@ -1,9 +1,7 @@
 package structLegajo
 
-import "github.com/xubiosueldos/conexionBD/structGormModel"
-
 type Centrodecosto struct {
-	structGormModel.GormModel
+	ID          int    `json:"id"`
 	Nombre      string `json:"nombre"`
 	Codigo      string `json:"codigo"`
 	Descripcion string `json:"descripcion"`
