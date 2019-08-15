@@ -87,7 +87,7 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "CentroDeCosto", strconv.Itoa(*legajo.Centrodecostoid))
+		centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "centrodecosto", strconv.Itoa(*legajo.Centrodecostoid))
 
 		legajo.Centrodecosto = centroDeCosto
 		framework.RespondJSON(w, http.StatusOK, legajo)
@@ -275,7 +275,7 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 }
 
 func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) *structLegajo.Centrodecosto {
-	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id)
+	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id, "CANQUERY")
 	var centroDeCosto structLegajo.Centrodecosto
 	json.Unmarshal([]byte(str), &centroDeCosto)
 
@@ -283,10 +283,10 @@ func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutentica
 
 }
 
-func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) string {
+func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string, options string) string {
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
-
+	strHlprSrv.Options = options
 	strHlprSrv.Tenant = token.Tenant
 	strHlprSrv.Token = token.Token
 	strHlprSrv.Username = token.Username
