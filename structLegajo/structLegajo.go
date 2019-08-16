@@ -37,17 +37,16 @@ type Legajo struct {
 	Condicionsiniestrado    *Condicionsiniestrado  `json:"condicionsiniestrado" gorm:"ForeignKey:Condicionsiniestradoid;association_foreignkey:ID;association_autoupdate:false;not null"`
 	Condicionsiniestradoid  *int                   `json:"condicionsiniestradoid" sql:"type:int REFERENCES Condicionsiniestrado(ID)" gorm:"not null"`
 	Obrasocial              *Obrasocial            `json:"obrasocial" gorm:"ForeignKey:Obrasocialid;association_foreignkey:ID;association_autoupdate:false;not null"`
-	Obrasocialid            *int                   `json:"obrasocialid" sql:"type:int REFERENCES Obrasocial(ID)" gorm:"not null"`
-	Conveniocolectivo       *Conveniocolectivo     `json:"conveniocolectivo" gorm:"ForeignKey:Conveniocolectivoid;association_foreignkey:ID;association_autoupdate:false;not null"`
-	Conveniocolectivoid     *int                   `json:"conveniocolectivoid" sql:"type:int REFERENCES Conveniocolectivo(ID)" gorm:"not null"`
-	Valorfijolrt            int                    `json:"valorfijolrt"`
+	Obrasocialid            *int                   `json:"obrasocialid" gorm:"not null"`
+	Conveniocolectivo       *string                `json:"conveniocolectivo" gorm:"not null"`
+	Valorfijolrt            float32                `json:"valorfijolrt"  sql:"type:decimal(19,4);"`
 	Conyuge                 []Conyuge              `json:"conyuge" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
 	Hijos                   []Hijo                 `json:"hijos" gorm:"ForeignKey:Legajoid;association_foreignkey:ID"`
-	Remuneracion            int                    `json:"remuneracion" gorm:"not null"`
+	Remuneracion            float32                `json:"remuneracion" sql:"type:decimal(19,4)" gorm:"not null"`
 	Horasmensualesnormales  string                 `json:"horasmensualesnormales" gorm:"not null"`
 	Fechaalta               *time.Time             `json:"fechaalta" gorm:"not null"`
 	Fechabaja               *time.Time             `json:"fechabaja"`
 	Centrodecosto           *Centrodecosto         `json:"centrodecosto" gorm:"ForeignKey:Centrodecostoid;association_foreignkey:ID;association_autoupdate:false"`
-	Centrodecostoid         *int                   `json:"centrodecostoid" sql:"type:int REFERENCES Centrodecosto(ID)"`
+	Centrodecostoid         *int                   `json:"centrodecostoid"`
 	Cbu                     string                 `json:"cbu"`
 }

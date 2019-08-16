@@ -18,7 +18,7 @@ INSERT INTO pais(id,nombre, codigo, activo,created_at)
 (-386,'ARABIA SAUDITA','ARABIA_SAUDITA',1,current_timestamp),
 (-551,'ARCHIPIELAGO DE SVBALBARD','ARCHIPIELAGO_DE_SVBALBARD',1,current_timestamp),
 (-252,'ARGELIA','ARGELIA',1,current_timestamp),
-(-100,'Argentina','ARGENTINA',1,current_timestamp),
+(-100,'ARGENTINA','ARGENTINA',1,current_timestamp),
 (-427,'ARMENIA','ARMENIA',1,current_timestamp),
 (-352,'ARUBA','ARUBA',1,current_timestamp),
 (-519,'ARUBA (TERRITORIO DE PAISES BAJOS)','ARUBA_TERRITORIO_DE_PAISES_BAJOS',1,current_timestamp),
