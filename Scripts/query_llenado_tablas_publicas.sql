@@ -405,6 +405,7 @@ values
 (-1,'Churruca','CHURRUCA',1,current_timestamp),
 (-1,'City Bell','CITY_BELL',1,current_timestamp),
 (-1,'Ciudadela','CIUDADELA',1,current_timestamp),
+(-1,'Ciudad Autónoma de Buenos Aires','CIUDAD_AUTONOMA_DE_BUENOS_AIRES',1,current_timestamp),
 (-1,'Ciudad Evita','CIUDAD_EVITA',1,current_timestamp),
 (-1,'Ciudad Madero','CIUDAD_MADERO',1,current_timestamp),
 (-1,'Claypole','CLAYPOLE',1,current_timestamp),
@@ -2759,7 +2760,6 @@ values
 
 INSERT INTO obrasocial(codigo, nombre, created_at, descripcion, activo)
             values
-('000000' ,'NINGUNA',current_timestamp, '', 1),
 ('000109' ,'O.S. DEL PERSONAL JERARQUICO DE LA INDUSTRIA GRAFICA DE LA REPUBLICA ARGENTINA',current_timestamp, '', 1),
 ('000208' ,'O.S. DEL PERSONAL DE LA INDUSTRIA GRAFICA DE LA PROVINCIA DE CORDOBA',current_timestamp, '', 1),
 ('000307' ,'O.S. PORTUARIOS ARGENTINOS DE MAR DEL PLATA',current_timestamp, '', 1),
