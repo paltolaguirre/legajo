@@ -22,8 +22,6 @@ type Legajo struct {
 	Provinciaid             *int                   `json:"provinciaid" sql:"type:int REFERENCES Provincia(ID)" gorm:"not null"`
 	Pais                    *Pais                  `json:"pais" gorm:"ForeignKey:Paisid;association_foreignkey:ID;association_autoupdate:false;not null"`
 	Paisid                  *int                   `json:"paisid" sql:"type:int REFERENCES Pais(ID)" gorm:"not null"`
-	Zona                    *Zona                  `json:"zona" gorm:"ForeignKey:Zonaid;association_foreignkey:ID;association_autoupdate:false"`
-	Zonaid                  *int                   `json:"zonaid" sql:"type:int REFERENCES Zona(ID)"`
 	Telefono                string                 `json:"telefono"`
 	Email                   string                 `json:"email"`
 	Modalidadcontratacion   *Modalidadcontratacion `json:"modalidadcontratacion" gorm:"ForeignKey:Modalidadcontratacionid;association_foreignkey:ID;association_autoupdate:false;not null"`
@@ -46,7 +44,7 @@ type Legajo struct {
 	Horasmensualesnormales  string                 `json:"horasmensualesnormales" gorm:"not null"`
 	Fechaalta               *time.Time             `json:"fechaalta" gorm:"not null"`
 	Fechabaja               *time.Time             `json:"fechabaja"`
-	Centrodecosto           *Centrodecosto         `json:"centrodecosto" gorm:"ForeignKey:Centrodecostoid;association_foreignkey:ID;association_autoupdate:false"`
+	Centrodecosto           *Centrodecosto         `json:"centrodecosto"`
 	Centrodecostoid         *int                   `json:"centrodecostoid"`
 	Cbu                     string                 `json:"cbu"`
 }
