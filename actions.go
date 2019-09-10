@@ -86,10 +86,12 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 			framework.RespondError(w, http.StatusNotFound, err.Error())
 			return
 		}
+		centroCostoID := legajo.Centrodecostoid
+		if centroCostoID != nil {
+			centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "centrodecosto", strconv.Itoa(*centroCostoID))
 
-		centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "centrodecosto", strconv.Itoa(*legajo.Centrodecostoid))
-
-		legajo.Centrodecosto = centroDeCosto
+			legajo.Centrodecosto = centroDeCosto
+		}
 		framework.RespondJSON(w, http.StatusOK, legajo)
 	}
 
