@@ -2762,6 +2762,7 @@ UPDATE Localidad SET id = -id;
 
 INSERT INTO obrasocial(codigo, nombre, created_at, descripcion, activo)
             values
+('000000','SIN OBRA SOCIAL',current_timestamp,'',1),            
 ('000109' ,'O.S. DEL PERSONAL JERARQUICO DE LA INDUSTRIA GRAFICA DE LA REPUBLICA ARGENTINA',current_timestamp, '', 1),
 ('000208' ,'O.S. DEL PERSONAL DE LA INDUSTRIA GRAFICA DE LA PROVINCIA DE CORDOBA',current_timestamp, '', 1),
 ('000307' ,'O.S. PORTUARIOS ARGENTINOS DE MAR DEL PLATA',current_timestamp, '', 1),
