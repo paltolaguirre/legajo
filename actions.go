@@ -16,10 +16,10 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/autenticacion/publico"
+	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
+	"github.com/xubiosueldos/conexionBD/Legajo/structLegajo"
 	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
 	"github.com/xubiosueldos/framework"
-	"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 type IdsAEliminar struct {
@@ -50,7 +50,7 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 		//defer db.Close()
 		defer apiclientconexionbd.CerrarDB(db)
@@ -76,7 +76,7 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 		//defer db.Close()
 		defer apiclientconexionbd.CerrarDB(db)
@@ -117,7 +117,7 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 		//	defer db.Close()
 		defer apiclientconexionbd.CerrarDB(db)
@@ -165,7 +165,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			versionMicroservicio := obtenerVersionLegajo()
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 			//defer db.Close()
 			defer apiclientconexionbd.CerrarDB(db)
@@ -217,7 +217,7 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 		//defer db.Close()
 		defer apiclientconexionbd.CerrarDB(db)
 
@@ -252,7 +252,7 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 		defer apiclientconexionbd.CerrarDB(db)
 
@@ -276,7 +276,7 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) *structLegajo.Centrodecosto {
+func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string) *structLegajo.Centrodecosto {
 	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id, "CANQUERY")
 	var centroDeCosto structLegajo.Centrodecosto
 	json.Unmarshal([]byte(str), &centroDeCosto)
@@ -285,7 +285,7 @@ func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutentica
 
 }
 
-func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string, options string) string {
+func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string, options string) string {
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
 	strHlprSrv.Options = options
@@ -330,15 +330,6 @@ func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *p
 	fmt.Println("BYTES RECIBIDOS :", len(str))
 
 	return str
-}
-
-func AutomigrateTablasPrivadas(db *gorm.DB) {
-
-	//para actualizar tablas...agrega columnas e indices, pero no elimina
-	db.AutoMigrate(&structLegajo.Conyuge{}, &structLegajo.Hijo{}, &structLegajo.Legajo{})
-
-	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
-	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
 }
 
 func obtenerVersionLegajo() int {
