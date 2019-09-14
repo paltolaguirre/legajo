@@ -47,12 +47,13 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		versionMicroservicio := obtenerVersionLegajo()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+		/*versionMicroservicio := obtenerVersionLegajo()
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
+		defer db.Close()
+		*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 
-		//defer db.Close()
 		defer apiclientconexionbd.CerrarDB(db)
 		var legajos []structLegajo.Legajo
 
@@ -73,12 +74,13 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		versionMicroservicio := obtenerVersionLegajo()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+		/*versionMicroservicio := obtenerVersionLegajo()
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
 		//defer db.Close()
+		*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
@@ -114,12 +116,12 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		versionMicroservicio := obtenerVersionLegajo()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+		/*versionMicroservicio := obtenerVersionLegajo()
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-		//	defer db.Close()
+		//	defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		if err := db.Create(&legajo_data).Error; err != nil {
@@ -162,12 +164,12 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			legajo_data.ID = p_legajoid
 
-			versionMicroservicio := obtenerVersionLegajo()
-			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+			/*versionMicroservicio := obtenerVersionLegajo()
 			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
 
-			//defer db.Close()
+			//defer db.Close()*/
+			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+			db := apiclientconexionbd.ObtenerDB(tenant)
 			defer apiclientconexionbd.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
@@ -214,11 +216,12 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		legajo_id := params["id"]
 
-		versionMicroservicio := obtenerVersionLegajo()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+		/*versionMicroservicio := obtenerVersionLegajo()
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-		//defer db.Close()
+		//defer db.Close()*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
+
 		defer apiclientconexionbd.CerrarDB(db)
 
 		//--Borrado Fisico
@@ -249,10 +252,11 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		versionMicroservicio := obtenerVersionLegajo()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
+		/*versionMicroservicio := obtenerVersionLegajo()
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
+		*/
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 
 		defer apiclientconexionbd.CerrarDB(db)
 
@@ -330,10 +334,4 @@ func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *s
 	fmt.Println("BYTES RECIBIDOS :", len(str))
 
 	return str
-}
-
-func obtenerVersionLegajo() int {
-	configuracion := configuracion.GetInstance()
-
-	return configuracion.Versionlegajo
 }
