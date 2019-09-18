@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
@@ -16,10 +17,9 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/autenticacion/publico"
-	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
+	"github.com/xubiosueldos/conexionBD/Legajo/structLegajo"
 	"github.com/xubiosueldos/framework"
-	"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 type IdsAEliminar struct {
@@ -47,13 +47,10 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 		var legajos []structLegajo.Legajo
 
 		//Lista todos los legajos
@@ -73,13 +70,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id).Error; gorm.IsRecordNotFoundError(err) {
@@ -114,13 +107,9 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//	defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		if err := db.Create(&legajo_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -162,13 +151,9 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			legajo_data.ID = p_legajoid
 
-			versionMicroservicio := obtenerVersionLegajo()
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
-			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-			//defer db.Close()
-			defer apiclientconexionbd.CerrarDB(db)
+			db := conexionBD.ObtenerDB(tenant)
+			defer conexionBD.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -214,12 +199,10 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		legajo_id := params["id"]
 
-		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		//--Borrado Fisico
 		if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
@@ -249,12 +232,10 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		versionMicroservicio := obtenerVersionLegajo()
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
 
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		if len(idsEliminar.Ids) > 0 {
 			for i := 0; i < len(idsEliminar.Ids); i++ {
@@ -276,7 +257,7 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string) *structLegajo.Centrodecosto {
+func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string) *structLegajo.Centrodecosto {
 	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id, "CANQUERY")
 	var centroDeCosto structLegajo.Centrodecosto
 	json.Unmarshal([]byte(str), &centroDeCosto)
@@ -285,7 +266,7 @@ func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutentica
 
 }
 
-func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *publico.Security, codigo string, id string, options string) string {
+func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string, options string) string {
 	var strHlprSrv strHlprServlet
 	token := *tokenAutenticacion
 	strHlprSrv.Options = options
@@ -330,19 +311,4 @@ func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *p
 	fmt.Println("BYTES RECIBIDOS :", len(str))
 
 	return str
-}
-
-func AutomigrateTablasPrivadas(db *gorm.DB) {
-
-	//para actualizar tablas...agrega columnas e indices, pero no elimina
-	db.AutoMigrate(&structLegajo.Conyuge{}, &structLegajo.Hijo{}, &structLegajo.Legajo{})
-
-	db.Model(&structLegajo.Hijo{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
-	db.Model(&structLegajo.Conyuge{}).AddForeignKey("legajoid", "legajo(id)", "CASCADE", "CASCADE")
-}
-
-func obtenerVersionLegajo() int {
-	configuracion := configuracion.GetInstance()
-
-	return configuracion.Versionlegajo
 }
