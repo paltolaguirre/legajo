@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
@@ -18,7 +19,6 @@ import (
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
 	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
 	"github.com/xubiosueldos/conexionBD/Legajo/structLegajo"
-	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
 	"github.com/xubiosueldos/framework"
 )
 
@@ -47,14 +47,10 @@ func LegajoList(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		/*versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-		defer db.Close()
-		*/
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
+		db := conexionBD.ObtenerDB(tenant)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 		var legajos []structLegajo.Legajo
 
 		//Lista todos los legajos
@@ -74,14 +70,9 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 
 		var legajo structLegajo.Legajo //Con &var --> lo que devuelve el metodo se le asigna a la var
 
-		/*versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-		//defer db.Close()
-		*/
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		//gorm:auto_preload se usa para que complete todos los struct con su informacion
 		if err := db.Set("gorm:auto_preload", true).First(&legajo, "id = ?", legajo_id).Error; gorm.IsRecordNotFoundError(err) {
@@ -116,13 +107,9 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 
 		defer r.Body.Close()
 
-		/*versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-		//	defer db.Close()*/
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		if err := db.Create(&legajo_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -164,13 +151,9 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			legajo_data.ID = p_legajoid
 
-			/*versionMicroservicio := obtenerVersionLegajo()
-			db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-
-			//defer db.Close()*/
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-			db := apiclientconexionbd.ObtenerDB(tenant)
-			defer apiclientconexionbd.CerrarDB(db)
+			db := conexionBD.ObtenerDB(tenant)
+			defer conexionBD.CerrarDB(db)
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
@@ -216,13 +199,10 @@ func LegajoRemove(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		legajo_id := params["id"]
 
-		/*versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-		//defer db.Close()*/
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
+		db := conexionBD.ObtenerDB(tenant)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		//--Borrado Fisico
 		if err := db.Unscoped().Where("id = ?", legajo_id).Delete(structLegajo.Legajo{}).Error; err != nil {
@@ -252,13 +232,10 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		/*versionMicroservicio := obtenerVersionLegajo()
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio)
-		*/
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant)
+		db := conexionBD.ObtenerDB(tenant)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		defer conexionBD.CerrarDB(db)
 
 		if len(idsEliminar.Ids) > 0 {
 			for i := 0; i < len(idsEliminar.Ids); i++ {
