@@ -1,38 +1,24 @@
 package main
 
 import (
-	"bytes"
-	"crypto/tls"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/xubiosueldos/conexionBD"
-	"github.com/xubiosueldos/framework/configuracion"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/conexionBD/Autenticacion/structAutenticacion"
 	"github.com/xubiosueldos/conexionBD/Legajo/structLegajo"
 	"github.com/xubiosueldos/framework"
+	"github.com/xubiosueldos/monoliticComunication"
 )
 
 type IdsAEliminar struct {
 	Ids []int `json:"ids"`
-}
-
-type strHlprServlet struct {
-	//	gorm.Model
-	Username string `json:"username"`
-	Tenant   string `json:"tenant"`
-	Token    string `json:"token"`
-	Options  string `json:"options"`
-	Id       string `json:"id"`
 }
 
 var nombreMicroservicio string = "legajo"
@@ -81,8 +67,7 @@ func LegajoShow(w http.ResponseWriter, r *http.Request) {
 		}
 		centroCostoID := legajo.Centrodecostoid
 		if centroCostoID != nil {
-			centroDeCosto := obtenerCentroDeCosto(w, r, tokenAutenticacion, "centrodecosto", strconv.Itoa(*centroCostoID))
-
+			centroDeCosto := monoliticComunication.Obtenercentrodecosto(w, r, tokenAutenticacion, strconv.Itoa(*centroCostoID))
 			legajo.Centrodecosto = centroDeCosto
 		}
 		framework.RespondJSON(w, http.StatusOK, legajo)
@@ -110,6 +95,14 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
+
+		centrodecostoid := legajo_data.Centrodecostoid
+		if centrodecostoid != nil {
+			if err_monolitico := monoliticComunication.Checkexistecentrodecosto(w, r, tokenAutenticacion, strconv.Itoa(*centrodecostoid)).Error; err_monolitico != nil {
+				framework.RespondError(w, http.StatusInternalServerError, err_monolitico.Error())
+				return
+			}
+		}
 
 		if err := db.Create(&legajo_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -159,6 +152,14 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			tx := db.Begin()
 
 			//modifico el legajo de acuerdo a lo enviado en el json
+			centrodecostoid := legajo_data.Centrodecostoid
+			if centrodecostoid != nil {
+				if err := monoliticComunication.Checkexistecentrodecosto(w, r, tokenAutenticacion, strconv.Itoa(*centrodecostoid)).Error; err != nil {
+					framework.RespondError(w, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}
+
 			if err := tx.Save(&legajo_data).Error; err != nil {
 				tx.Rollback()
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -255,60 +256,4 @@ func LegajosRemoveMasivo(w http.ResponseWriter, r *http.Request) {
 		framework.RespondJSON(w, http.StatusOK, resultadoDeEliminacion)
 	}
 
-}
-
-func obtenerCentroDeCosto(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string) *structLegajo.Centrodecosto {
-	str := reqMonolitico(w, r, tokenAutenticacion, codigo, id, "CANQUERY")
-	var centroDeCosto structLegajo.Centrodecosto
-	json.Unmarshal([]byte(str), &centroDeCosto)
-
-	return &centroDeCosto
-
-}
-
-func reqMonolitico(w http.ResponseWriter, r *http.Request, tokenAutenticacion *structAutenticacion.Security, codigo string, id string, options string) string {
-	var strHlprSrv strHlprServlet
-	token := *tokenAutenticacion
-	strHlprSrv.Options = options
-	strHlprSrv.Tenant = token.Tenant
-	strHlprSrv.Token = token.Token
-	strHlprSrv.Username = token.Username
-	strHlprSrv.Id = id
-
-	pagesJson, err := json.Marshal(strHlprSrv)
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	url := configuracion.GetUrlMonolitico() + codigo + "GoServlet"
-
-	fmt.Println("URL:>", url)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(pagesJson))
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	defer resp.Body.Close()
-
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	str := string(body)
-	fmt.Println("BYTES RECIBIDOS :", len(str))
-
-	return str
 }
