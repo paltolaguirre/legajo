@@ -150,6 +150,7 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
+			defer tx.Rollback()
 
 			//modifico el legajo de acuerdo a lo enviado en el json
 			centrodecostoid := legajo_data.Centrodecostoid
@@ -161,21 +162,18 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err := tx.Save(&legajo_data).Error; err != nil {
-				tx.Rollback()
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			//despues de modificar, recorro los hijos asociados al legajo para ver si alguno fue eliminado logicamente y lo elimino de la BD
 			if err := tx.Model(structLegajo.Hijo{}).Unscoped().Where("legajoid = ? AND deleted_at is not null", legajoid).Delete(structLegajo.Hijo{}).Error; err != nil {
-				tx.Rollback()
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			//despues de modificar, recorro el conyuge asociado al legajo para ver si fue eliminado logicamente y lo elimino de la BD
 			if err := tx.Model(structLegajo.Conyuge{}).Unscoped().Where("legajoid = ? AND deleted_at is not null", legajoid).Delete(structLegajo.Conyuge{}).Error; err != nil {
-				tx.Rollback()
 				framework.RespondError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
