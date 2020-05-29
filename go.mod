@@ -2,8 +2,6 @@ module github.com/xubiosueldos/legajo
 
 go 1.12
 
-replace github.com/xubiosueldos/conexionBD => /home/paula/go/src/github.com/xubiosueldos/conexionBD
-
 require (
 	github.com/gorilla/mux v1.7.2
 	github.com/jinzhu/gorm v1.9.8
