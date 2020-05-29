@@ -3309,7 +3309,9 @@ VALUES
 (-52,current_timestamp,'Licencia por paternidad','32','',1),
 (-53,current_timestamp,'Licencia por fuerza mayor (Art. 221 LCT)','33','',1),
 (-54,current_timestamp,'Empleado Eventual en Empresa Usuaria (para uso de la E.S.E.)','42','',1),
-(-55,current_timestamp,'Empleado eventual en EU (para uso de la ESE) mes incompleto ','43','',1);
+(-55,current_timestamp,'Empleado eventual en EU (para uso de la ESE) mes incompleto ','43','',1),
+(-56,current_timestamp,'Suspendido Res. 397/2020 MTEySS c/Aportes OS','48','',1),
+(-57,current_timestamp,'Susp. periodo parcial L 20744 art. 223bis/Res. 397 MTEySS','49','',1);
 
   END;
 $$;
