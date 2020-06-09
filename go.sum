@@ -256,6 +256,8 @@ github.com/xubiosueldos/framework v0.0.0-20200327232331-2ef9abb83842 h1:o7KCui5K
 github.com/xubiosueldos/framework v0.0.0-20200327232331-2ef9abb83842/go.mod h1:YpPF+hDR5I/7906gpS7Tjz+/wJX5KJCVyUDAWXeeOds=
 github.com/xubiosueldos/framework v1.1.0 h1:RdrKnheN0osTOap2petNbO3ZWn2vJol3dGEUDlFAEdE=
 github.com/xubiosueldos/framework v1.1.0/go.mod h1:YpPF+hDR5I/7906gpS7Tjz+/wJX5KJCVyUDAWXeeOds=
+github.com/xubiosueldos/framework v1.1.2 h1:ubFEFjlBw/dGPaskLVDbTzL8S+wpA6ciqu+LlS8ojDY=
+github.com/xubiosueldos/framework v1.1.2/go.mod h1:qMR+Nv+a9YDVXR50/CIZrjVT784I6v1NyCACLesWOXw=
 github.com/xubiosueldos/legajo v1.0.0 h1:GCrlYMgDceGIaofSBvph4JYSxF84Mc2Rj/KIHLDAZUk=
 github.com/xubiosueldos/monoliticComunication v0.0.0-20190930154952-2b2eb5ee2767 h1:dZxhpwUTTwZYm37ddbNEw5X1koMLISjYv+XNhhZ4SoI=
 github.com/xubiosueldos/monoliticComunication v0.0.0-20190930154952-2b2eb5ee2767/go.mod h1:mBGhKMUluOMFdHIvRznFd7Nqoe3feesk11q1QI8ImRI=
