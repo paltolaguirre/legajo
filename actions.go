@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/xubiosueldos/legajo/fillLegajo"
 	"net/http"
 	"strconv"
 
@@ -104,6 +105,11 @@ func LegajoAdd(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		if err := fillLegajo.CheckAndFill(&legajo_data, db); err != nil {
+			framework.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		if err := db.Create(&legajo_data).Error; err != nil {
 			framework.RespondError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -147,6 +153,11 @@ func LegajoUpdate(w http.ResponseWriter, r *http.Request) {
 			tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 			db := conexionBD.ObtenerDB(tenant)
 			defer conexionBD.CerrarDB(db)
+
+			if err := fillLegajo.CheckAndFill(&legajo_data, db); err != nil {
+				framework.RespondError(w, http.StatusBadRequest, err.Error())
+				return
+			}
 
 			//abro una transacción para que si hay un error no persista en la DB
 			tx := db.Begin()
