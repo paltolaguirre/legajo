@@ -14,11 +14,11 @@ func CheckAndFill(legajo *structLegajo.Legajo, db * gorm.DB) error {
 		return errors.New("El numero de legajo es obligatorio")
 	}
 
-	if existeLegajo(legajo.Legajo, db) {
+	if existeLegajo(legajo.ID, legajo.Legajo, db) {
 		return errors.New("Ya existe un legajo con ese mismo numero de legajo")
 	}
 
-	if existeCuil(legajo.Cuil, db) {
+	if existeCuil(legajo.ID, legajo.Cuil, db) {
 		return errors.New("Ya existe un legajo con ese mismo cuil")
 	}
 
@@ -172,18 +172,18 @@ func CheckAndFill(legajo *structLegajo.Legajo, db * gorm.DB) error {
 
 }
 
-func existeCuil(cuil *string, db *gorm.DB) bool {
+func existeCuil(id int, cuil *string, db *gorm.DB) bool {
 	var count int
 
-	db.Model(&structLegajo.Legajo{}).Where("cuil = ?", cuil).Count(&count)
+	db.Model(&structLegajo.Legajo{}).Where("cuil = ? AND id != ?", cuil, id).Count(&count)
 
 	return count > 0
 }
 
-func existeLegajo(legajo string, db *gorm.DB) bool {
+func existeLegajo(id int, legajo string, db *gorm.DB) bool {
 	var count int
 
-	db.Model(&structLegajo.Legajo{}).Where("legajo = ?", legajo).Count(&count)
+	db.Model(&structLegajo.Legajo{}).Where("legajo = ? AND id != ?", legajo, id).Count(&count)
 
 	return count > 0
 }
