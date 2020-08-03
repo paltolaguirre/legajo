@@ -229,11 +229,11 @@ func findIdObraSocial(obrasocial *structLegajo.Obrasocial, db *gorm.DB) (*int, e
 	}
 	if obrasocial.Codigo != ""{
 		if db.Where("codigo ilike ?", obrasocial.Codigo).First(&obrasocial).RecordNotFound() {
-			return nil, errors.New("No existe la obrasocial con el codigo " + obrasocial.Codigo)
+			return nil, errors.New("No existe la obra social con el codigo " + obrasocial.Codigo)
 		}
 	} else if obrasocial.Nombre != "" {
 		if db.Where("nombre ilike ?", obrasocial.Nombre).First(&obrasocial).RecordNotFound(){
-			return nil, errors.New("No existe la provincia con el nombre " + obrasocial.Nombre)
+			return nil, errors.New("No existe la obra social con el nombre " + obrasocial.Nombre)
 		}
 	} else {
 		return nil, errors.New("La obra social es obligatoria")
@@ -352,7 +352,7 @@ func findIdCondicion(condicion *structLegajo.Condicion, db *gorm.DB) (*int,error
 		}
 	} else if condicion.Nombre != "" {
 		if db.Where("nombre ilike ?", condicion.Nombre).First(&condicion).RecordNotFound(){
-			return nil, errors.New("No existe la provincia con el nombre " + condicion.Nombre)
+			return nil, errors.New("No existe la condicion con el nombre " + condicion.Nombre)
 		}
 	} else {
 		return nil, errors.New("La condicion es obligatoria")
